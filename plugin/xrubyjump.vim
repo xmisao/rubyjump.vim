@@ -22,12 +22,14 @@ func! XRubyJumpWindowOpen()
   " Enterキー入力時のマップ定義
   inoremap <buffer> <CR> <C-R>=XRubyJumpEnterKeyHandler()<CR>
   " 補完開始用のマップ定義
-  inoremap <buffer> <Plug>(startXRubyJumpCompletion) <C-R>=XRubyJumpCompletion()<CR>
+  "inoremap <buffer> <Plug>(startXRubyJumpCompletion) <C-R>=XRubyJumpCompletion()<CR>
   " バッファを閉じるautocmdの定義
   autocmd InsertLeave,BufLeave <buffer> :call XRubyJumpWindowClose()
+  setlocal completefunc=XRubyJumpCompleteFunc
 
   call feedkeys('i') " インサートモードに入る
-  call feedkeys("\<Plug>(startXRubyJumpCompletion)") " 補完を開始する
+  "call feedkeys("\<Plug>(startXRubyJumpCompletion)") " 補完を開始する
+  call feedkeys("\<C-x>\<C-u>")
   call feedkeys("\<C-p>") " 候補を未選択の状態にする
 endfunc
 
@@ -77,6 +79,28 @@ endfunc
 func! XRubyJumpCompletion()
   call complete(col('.'), g:XRubyJumpList)
   return ''
+endfunc
+
+"
+func! XRubyJumpCompleteFunc(findstart, base)
+  if a:findstart
+    return 0
+  else
+ruby << RUBY
+  #list_str = VIM::evaluate('g:XRubyJumpList')
+  #list = list_str.split('\n')
+  list = VIM::evaluate('g:XRubyJumpList')
+  query = VIM::evaluate('a:base')
+  print query
+  query_regexp = Regexp.new(([''] + query.split('') + ['']).join('.*'))
+  result = []
+  list.each{|item|
+    result << item if query_regexp =~ item
+  }
+  VIM.command('let g:XRubyJumpCandidate = [' + result.map{|i| "'#{i}'"}.join(', ') + ']')
+RUBY
+    return g:XRubyJumpCandidate
+  endif
 endfunc
 
 " *.rbファイルが開かれた時にXRubyJumpコマンドを定義
