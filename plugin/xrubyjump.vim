@@ -1,7 +1,7 @@
 "おまじない
-if exists("g:loaded_xrubyjump")
-  finish
-endif
+"if exists("g:loaded_xrubyjump")
+"  finish
+"endif
 let g:loaded_xrubyjump = 1
 
 let s:save_cpo = &cpo
@@ -25,6 +25,7 @@ func! XRubyJumpWindowOpen()
   "inoremap <buffer> <Plug>(startXRubyJumpCompletion) <C-R>=XRubyJumpCompletion()<CR>
   " バッファを閉じるautocmdの定義
   autocmd InsertLeave,BufLeave <buffer> :call XRubyJumpWindowClose()
+  autocmd CursorMovedI <buffer> :call feedkeys("\<C-x>\<C-u>\<C-p>")
   setlocal completefunc=XRubyJumpCompleteFunc
 
   call feedkeys('i') " インサートモードに入る
@@ -87,8 +88,6 @@ func! XRubyJumpCompleteFunc(findstart, base)
     return 0
   else
 ruby << RUBY
-  #list_str = VIM::evaluate('g:XRubyJumpList')
-  #list = list_str.split('\n')
   list = VIM::evaluate('g:XRubyJumpList')
   query = VIM::evaluate('a:base')
   print query
@@ -97,9 +96,9 @@ ruby << RUBY
   list.each{|item|
     result << item if query_regexp =~ item
   }
-  VIM.command('let g:XRubyJumpCandidate = [' + result.map{|i| "'#{i}'"}.join(', ') + ']')
+  VIM.command('let condidate = [' + result.map{|i| "'#{i}'"}.join(', ') + ']')
 RUBY
-    return g:XRubyJumpCandidate
+    return condidate
   endif
 endfunc
 
