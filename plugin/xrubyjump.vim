@@ -7,6 +7,18 @@ let g:loaded_xrubyjump = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
+ruby << RUBY
+class XRubyJump
+  attr_accessor :index, :list
+
+  def clear
+    @index = Hash.new{|h, k| h[k] = [] }
+    @list = []
+  end
+end
+$xrubyjump = XRubyJump.new
+RUBY
+
 " 候補選択ウィンドウを開く
 func! XRubyJumpWindowOpen()
   " 初期化
@@ -40,22 +52,19 @@ ruby << RUBY
   buf = VIM::Buffer.current
   index = [] # 位置情報
   list = [] # 補完候補
+  $xrubyjump.clear
   for i in (1..buf.length)
     if m = buf[i].match(/def (\w+)/)
-      index << "'#{m[1]}': [#{i}, #{buf[i].index('def') + 2}]"
-      list << "'#{m[1]}'"
+      name = m[1]
+      $xrubyjump.index[name] << {:buffer => buf.number, :row => i, :col => buf[i].index('def')}
     end
     if m = buf[i].match(/class (\w+)/)
-      index << "'#{m[1]}': [#{i}, #{buf[i].index('class') + 2}]"
-      list << "'#{m[1]}'"
+      $xrubyjump.index[name] << {:buffer => buf.number, :row => i, :col => buf[i].index('class')}
     end
     if m = buf[i].match(/module (\w+)/)
-      index << "'#{m[1]}': [#{i}, #{buf[i].index('module') + 2}]"
-      list << "'#{m[1]}'"
+      $xrubyjump.index[name] << {:buffer => buf.number, :row => i, :col => buf[i].index('module')}
     end
   end
-  VIM.command('let g:XRubyJumpIndex = {' + index.join(', ') + '}')
-  VIM.command('let g:XRubyJumpList = [' + list.sort.uniq.join(', ') + ']')
 RUBY
 endfunc
 
@@ -65,8 +74,16 @@ func! XRubyJumpEnterKeyHandler()
   call XRubyJumpWindowClose()
 
   " 選択した定義にカーソルを移動
-  let pos = get(g:XRubyJumpIndex, query, [0, 0])
-  call cursor(pos[0], pos[1])
+ruby << RUBY
+  query = VIM::evaluate('query')
+  pos = $xrubyjump.index[query][0]
+  if pos
+    VIM.command("let pos = {'row': #{pos[:row]}, 'col': #{pos[:col]}}")
+  else
+    VIM.command("let pos = {'row': 0, 'col': 0}")
+  end
+RUBY
+  call cursor(pos['row'], pos['col'])
 
   return ''
 endfunc
@@ -88,7 +105,7 @@ func! XRubyJumpCompleteFunc(findstart, base)
     return 0
   else
 ruby << RUBY
-  list = VIM::evaluate('g:XRubyJumpList')
+  list = $xrubyjump.index.keys
   query = VIM::evaluate('a:base')
   print query
   query_regexp = Regexp.new(([''] + query.split('') + ['']).join('.*'))
