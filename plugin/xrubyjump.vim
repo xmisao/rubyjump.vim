@@ -12,6 +12,13 @@ set cpo&vim
 ruby << RUBY
 module XRubyJump
   module Helper
+    # カーソルの座標を返す
+    def get_pos()
+      win = win_num(VIM::Window.current)
+      pos = VIM::evaluate("getpos('.')")
+      {:window => win, :row => pos[1], :col => pos[2]}
+    end
+
     # ウィンドウの番号を返す
     def win_num(window)
       for i in (0..VIM::Window.count - 1)
@@ -50,8 +57,40 @@ module XRubyJump
       @last = Hash.new{|h, k| h[k] = {}}
     end
 
-    def clear
+    def build_index(local)
+      # カーソル位置を保存
+      $xrubyjump.cursor = get_pos()
+      debug('cursor: ' + $xrubyjump.cursor.inspect)
+
+      # 初期化
       @index = Hash.new{|h, k| h[k] = [] }
+      $xrubyjump.local = local
+      debug('local: ' + $xrubyjump.local.to_s)
+      for win in (0..VIM::Window.count - 1)
+        # local実行の場合はカレントウィンドウ以外は読み飛ばす
+        next if local && win_num(VIM::Window.current) != win
+
+        buf = VIM::Window[win].buffer
+        filetype = VIM.evaluate("getbufvar(#{buf.number}, '&filetype')")
+        next if filetype != 'ruby'
+        index = [] # 位置情報
+        list = [] # 補完候補
+        for i in (1..buf.length)
+          if m = buf[i].match(/def (\w+)/)
+            name = m[1]
+            $xrubyjump.add_index(name, win, i, buf[i].index('def'))
+          end
+          if m = buf[i].match(/class (\w+)/)
+            name = m[1]
+            $xrubyjump.add_index(name, win, i, buf[i].index('class'))
+          end
+          if m = buf[i].match(/module (\w+)/)
+            name = m[1]
+            $xrubyjump.add_index(name, win, i, buf[i].index('module'))
+          end
+        end
+      end
+      debug("index: " + $xrubyjump.index.inspect)
     end
 
     def add_index(name, window, row, col)
@@ -102,6 +141,26 @@ module XRubyJump
       @last[win][@query] = idx
     end
 
+    def forward()
+      pos = get_pos() 
+      definitions = @index.values.flatten.sort_by{|i| i[:row] }
+      target = definitions.find{|i| i[:row] > pos[:row] }
+      target = definitions[0] unless target
+      target = target.dup
+      target[:col] += 1 # 座標の微調整
+      move(target)
+    end
+
+    def backward()
+      pos = get_pos() 
+      definitions = @index.values.flatten.sort_by{|i| i[:row] * -1 }
+      target = definitions.find{|i| i[:row] < pos[:row] }
+      target = definitions[0] unless target
+      target = target.dup
+      target[:col] += 1 # 座標の微調整
+      move(target)
+    end
+
     def get_list()
       @index.keys.sort
     end
@@ -133,7 +192,7 @@ func! XRubyJumpWindowOpen(local)
   setlocal completefunc=XRubyJumpCompleteFunc
   setlocal completeopt=menuone
   " 文字を入力したら補完を開始
-  for c in split("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_",'\zs')
+  for c in split("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789",'\zs')
     exec "inoremap <buffer> " . c . " " . c . "\<C-x>\<C-u>\<C-p><Down>"
   endfor
   " 文字を削除した場合も補完を開始
@@ -148,41 +207,8 @@ endfunc
 " 位置情報と補完候補の初期化
 func! XRubyJumpInitialize(local)
 ruby << RUBY
-  # カーソル位置を保存
-  win = win_num(VIM::Window.current)
-  pos = VIM::evaluate("getpos('.')")
-  $xrubyjump.cursor = {:window => win, :row => pos[1], :col => pos[2]}
-  debug('cursor: ' + $xrubyjump.cursor.inspect)
-
-  # 初期化
-  $xrubyjump.clear
   local = VIM::evaluate('a:local') != 0
-  $xrubyjump.local = local
-  debug('local: ' + $xrubyjump.local.to_s)
-  for win in (0..VIM::Window.count - 1)
-    next if local && win_num(VIM::Window.current) != win
-
-    buf = VIM::Window[win].buffer
-    filetype = VIM.evaluate("getbufvar(#{buf.number}, '&filetype')")
-    next if filetype != 'ruby'
-    index = [] # 位置情報
-    list = [] # 補完候補
-    for i in (1..buf.length)
-      if m = buf[i].match(/def (\w+)/)
-        name = m[1]
-        $xrubyjump.add_index(name, win, i, buf[i].index('def'))
-      end
-      if m = buf[i].match(/class (\w+)/)
-        name = m[1]
-        $xrubyjump.add_index(name, win, i, buf[i].index('class'))
-      end
-      if m = buf[i].match(/module (\w+)/)
-        name = m[1]
-        $xrubyjump.add_index(name, win, i, buf[i].index('module'))
-      end
-    end
-  end
-  debug("index: " + $xrubyjump.index.inspect)
+  $xrubyjump.build_index(local)
 RUBY
 endfunc
 
@@ -249,11 +275,40 @@ ruby << RUBY
 RUBY
 endfunc
 
+" カーソル下の単語でXRubyJumpを実行
+func! XRubyJumpCursor()
+  call XRubyJumpInitialize(0)
+ruby << RUBY
+  query = VIM::evaluate('expand("<cword>")')
+  $xrubyjump.query = query
+  debug('query: ' + $xrubyjump.query)
+  pos = $xrubyjump.find(query)
+  move(pos) if pos
+RUBY
+endfunc
+
+func! XRubyJumpForward()
+  call XRubyJumpInitialize(1)
+ruby << RUBY
+  $xrubyjump.forward()
+RUBY
+endfunc
+
+func! XRubyJumpBackward()
+  call XRubyJumpInitialize(1)
+ruby << RUBY
+  $xrubyjump.backward()
+RUBY
+endfunc
+
 " XRubyJumpコマンドを定義(XRubyJumpLocalは*.rbの編集中のみ)
 autocmd BufNewFile,BufRead *.rb command! -buffer XRubyJumpLocal :call XRubyJumpWindowOpen(1)
 command! XRubyJump :call XRubyJumpWindowOpen(0)
 command! XRubyJumpNext :call XRubyJumpNext()
 command! XRubyJumpPrev :call XRubyJumpPrev()
+command! XRubyJumpCursor :call XRubyJumpCursor()
+command! XRubyJumpForward :call XRubyJumpForward()
+command! XRubyJumpBackward :call XRubyJumpBackward()
 
 " おまじない
 let &cpo = s:save_cpo
