@@ -342,7 +342,7 @@ endfunc
 
 " ジャンプ中であればXRubyJumpPrevを
 " ジャンプ中でなければXRubyJumpBackwardを実行する
-func! XRubyJumpNextForward()
+func! XRubyJumpPrevBackward()
 ruby << RUBY
   debug('jumping: ' + $xrubyjump.inspect)
   if $xrubyjump.jumping
