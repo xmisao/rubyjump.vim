@@ -1,5 +1,9 @@
+if !exists('g:xrubyjump#debug')
+  let g:xrubyjump#debug = 0
+endif
+
 "おまじない
-if g:XRubyJumpDebug != 1 " デバッグ時は再読み込みを許容
+if g:xrubyjump#debug != 1 " デバッグ時は再読み込みを許容
   if exists("g:loaded_xrubyjump")
     finish
   endif
@@ -30,19 +34,22 @@ module XRubyJump
 
     # 指定したウィンドウ、行、列にカーソルを移動させる
     def move(pos)
+      debug('pos: ' + pos.inspect)
       VIM.command("#{pos[:window] + 1}wincmd w")
+      debug('command: ' + "call cursor(#{pos[:row]}, #{pos[:col]})")
       VIM.command("call cursor(#{pos[:row]}, #{pos[:col]})")
     end
 
     # g:XRubyJumpDebugが1ならデバッグメッセージを出力
     def debug(obj)
-      flag = VIM.evaluate('g:XRubyJumpDebug')
+      flag = VIM.evaluate('g:xrubyjump#debug')
       if flag == 1
         message = obj.is_a?(String) ? obj : obj.inspect
-        echom("XRubyJumpDebug " + message)
+        echom("[XRubyJumpDebug] " + message)
       end
     end
 
+    # 文字列を表示し
     def echom(str)
       VIM.command("echom '#{str}'")
     end
@@ -78,15 +85,15 @@ module XRubyJump
         for i in (1..buf.length)
           if m = buf[i].match(/def (\w+)/)
             name = m[1]
-            $xrubyjump.add_index(name, win, i, buf[i].index('def'))
+            $xrubyjump.add_index(name, win, i, buf[i].index('def') + 1)
           end
           if m = buf[i].match(/class (\w+)/)
             name = m[1]
-            $xrubyjump.add_index(name, win, i, buf[i].index('class'))
+            $xrubyjump.add_index(name, win, i, buf[i].index('class') + 1)
           end
           if m = buf[i].match(/module (\w+)/)
             name = m[1]
-            $xrubyjump.add_index(name, win, i, buf[i].index('module'))
+            $xrubyjump.add_index(name, win, i, buf[i].index('module') + 1)
           end
         end
       end
@@ -109,23 +116,19 @@ module XRubyJump
       # 最後にフォーカスした場所の解決を試みてダメなら0番目の候補で再試行
       pos = nil
       if @index[name].length > idx
-        pos = @index[name][idx].dup
+        pos = @index[name][idx]
       else
-        pos = @index[name][0].dup # 再試行はnameの要素がなければnilになる
+        pos = @index[name][0] # 再試行はnameの要素がなければnilになる
       end
 
       @last[win][name] = idx # 最後のフォーカスを更新
 
-      # 座標の微調整
-      if pos
-        pos[:col] += 2
-      end
       pos
     end
 
     def next(num)
       # 名前が正しく入力されていない場合は何もしない
-      return unless @index[@query] && @index[@query].length > 0
+      return unless @query && @index[@query] && @index[@query].length > 0
 
       # XRubyJumpLocal時のみウィンドウ番号を使用、グローバルは0
       win = 0
@@ -135,8 +138,7 @@ module XRubyJump
 
       # 次の候補の座標へカーソルを移動
       idx = (@last[win][@query] + num) % @index[@query].length
-      pos = @index[@query][idx].dup
-      pos[:col] += 1 # 座標の微調整
+      pos = @index[@query][idx]
       move(pos)
       @last[win][@query] = idx
     end
@@ -146,8 +148,7 @@ module XRubyJump
       definitions = @index.values.flatten.sort_by{|i| i[:row] }
       target = definitions.find{|i| i[:row] > pos[:row] }
       target = definitions[0] unless target
-      target = target.dup
-      target[:col] += 1 # 座標の微調整
+      return unless target
       move(target)
     end
 
@@ -156,8 +157,7 @@ module XRubyJump
       definitions = @index.values.flatten.sort_by{|i| i[:row] * -1 }
       target = definitions.find{|i| i[:row] < pos[:row] }
       target = definitions[0] unless target
-      target = target.dup
-      target[:col] += 1 # 座標の微調整
+      return unless target
       move(target)
     end
 
@@ -223,7 +223,11 @@ ruby << RUBY
   $xrubyjump.query = query
   debug('query: ' + $xrubyjump.query)
   pos = $xrubyjump.find(query)
-  move(pos) if pos
+  if pos
+    pos = pos.dup
+    pos[:col] += 1 # なぜか少しずれるので座標を微調整
+    move(pos)
+  end
   $xrubyjump.jumping = true # ジャンプ中フラグを立てる
   $xrubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
 RUBY
@@ -289,6 +293,7 @@ ruby << RUBY
   debug('query: ' + $xrubyjump.query)
   pos = $xrubyjump.find(query)
   move(pos) if pos
+  $xrubyjump.jumping = true # ジャンプ中フラグを立てる
   $xrubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
 RUBY
   " 移動検出のためのautocmd登録
@@ -353,6 +358,11 @@ ruby << RUBY
 RUBY
 endfunc
 
+" バージョン情報
+func! XRubyJumpVersion()
+  echo "XRubyJump 0.9.0"
+endfunc
+
 " 自動コマンドグループを定義
 augroup xrubyjump
 
@@ -366,6 +376,18 @@ command! XRubyJumpForward :call XRubyJumpForward()
 command! XRubyJumpBackward :call XRubyJumpBackward()
 command! XRubyJumpNextForward :call XRubyJumpNextForward()
 command! XRubyJumpPrevBackward :call XRubyJumpPrevBackward()
+command! XRubyJumpVersion :call XRubyJumpVersion()
+
+" キーマップの定義
+map <Plug>(xrubyjump_local) :<C-u>call XRubyJumpWindowOpen(1)<CR>
+map <Plug>(xrubyjump) :<C-u>call XRubyJumpWindowOpen(0)<CR>
+map <Plug>(xrubyjump_cursor) :<C-u>call XRubyJumpCursor()<CR>
+map <Plug>(xrubyjump_next) :<C-u>call XRubyJumpNext()<CR>
+map <Plug>(xrubyjump_prev) :<C-u>call XRubyJumpPrev()<CR>
+map <Plug>(xrubyjump_forward) :<C-u>call XRubyJumpForward()<CR>
+map <Plug>(xrubyjump_backward) :<C-u>call XRubyJumpBackward()<CR>
+map <Plug>(xrubyjump_next_forward) :<C-u>call XRubyJumpNextForward()<CR>
+map <Plug>(xrubyjump_prev_backward) :<C-u>call XRubyJumpPrevBackward()<CR>
 
 " おまじない
 let &cpo = s:save_cpo
