@@ -51,7 +51,7 @@ module XRubyJump
   end
 
   class Main
-    attr_accessor :index, :cursor, :last, :query, :local
+    attr_accessor :index, :cursor, :last, :query, :local, :jumping, :jumptime
 
     def initialize
       @last = Hash.new{|h, k| h[k] = {}}
@@ -224,8 +224,11 @@ ruby << RUBY
   debug('query: ' + $xrubyjump.query)
   pos = $xrubyjump.find(query)
   move(pos) if pos
+  $xrubyjump.jumping = true # ジャンプ中フラグを立てる
+  $xrubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
 RUBY
-
+  " 移動検出のためのautocmd登録
+  autocmd xrubyjump CursorMoved * :call XRubyJumpCursorMoved()
   return ''
 endfunc
 
@@ -265,6 +268,7 @@ endfunc
 func! XRubyJumpNext()
 ruby << RUBY
   $xrubyjump.next(1)
+  $xrubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
 RUBY
 endfunc
 
@@ -272,6 +276,7 @@ endfunc
 func! XRubyJumpPrev()
 ruby << RUBY
   $xrubyjump.next(-1)
+  $xrubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
 RUBY
 endfunc
 
@@ -284,9 +289,13 @@ ruby << RUBY
   debug('query: ' + $xrubyjump.query)
   pos = $xrubyjump.find(query)
   move(pos) if pos
+  $xrubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
 RUBY
+  " 移動検出のためのautocmd登録
+  autocmd xrubyjump CursorMoved * :call XRubyJumpCursorMoved()
 endfunc
 
+" バッファ内の次の候補に飛ぶ
 func! XRubyJumpForward()
   call XRubyJumpInitialize(1)
 ruby << RUBY
@@ -294,6 +303,7 @@ ruby << RUBY
 RUBY
 endfunc
 
+" バッファ内の前の候補に飛ぶ
 func! XRubyJumpBackward()
   call XRubyJumpInitialize(1)
 ruby << RUBY
@@ -301,14 +311,61 @@ ruby << RUBY
 RUBY
 endfunc
 
+func! XRubyJumpCursorMoved()
+ruby << RUBY
+  debug('cursor moved.')
+  if $xrubyjump.jumptime
+    # 最終ジャンプ時刻から0.1秒未満のイベントは無視する
+    # これはcursor()によるカーソル移動が関数から抜けた後に処理されるので
+    # ジャンプによる移動とジャンプ後のユーザによる移動を区別できないため
+    if Time.now.to_f - $xrubyjump.jumptime > 0.1
+      $xrubyjump.jumping = false # ジャンプ中フラグをクリア
+      debug('jumping flag clear.')
+      VIM::command("autocmd! xrubyjump CursorMoved *") # カーソル移動のautocmdを削除
+    end
+end
+RUBY
+endfunc
+
+" ジャンプ中であればXRubyJumpNextを
+" ジャンプ中でなければXRubyJumpForwardを実行する
+func! XRubyJumpNextForward()
+ruby << RUBY
+  debug('jumping: ' + $xrubyjump.inspect)
+  if $xrubyjump.jumping
+    VIM::command("XRubyJumpNext")
+  else
+    VIM::command("XRubyJumpForward")
+  end
+RUBY
+endfunc
+
+" ジャンプ中であればXRubyJumpPrevを
+" ジャンプ中でなければXRubyJumpBackwardを実行する
+func! XRubyJumpNextForward()
+ruby << RUBY
+  debug('jumping: ' + $xrubyjump.inspect)
+  if $xrubyjump.jumping
+    VIM::command("XRubyJumpPrev")
+  else
+    VIM::command("XRubyJumpBackward")
+  end
+RUBY
+endfunc
+
+" 自動コマンドグループを定義
+augroup xrubyjump
+
 " XRubyJumpコマンドを定義(XRubyJumpLocalは*.rbの編集中のみ)
 autocmd BufNewFile,BufRead *.rb command! -buffer XRubyJumpLocal :call XRubyJumpWindowOpen(1)
 command! XRubyJump :call XRubyJumpWindowOpen(0)
+command! XRubyJumpCursor :call XRubyJumpCursor()
 command! XRubyJumpNext :call XRubyJumpNext()
 command! XRubyJumpPrev :call XRubyJumpPrev()
-command! XRubyJumpCursor :call XRubyJumpCursor()
 command! XRubyJumpForward :call XRubyJumpForward()
 command! XRubyJumpBackward :call XRubyJumpBackward()
+command! XRubyJumpNextForward :call XRubyJumpNextForward()
+command! XRubyJumpPrevBackward :call XRubyJumpPrevBackward()
 
 " おまじない
 let &cpo = s:save_cpo
