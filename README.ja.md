@@ -49,7 +49,6 @@ xrubyjump.vimは以下のコマンドをVimに追加します。
 #### XRubyJump
 
 開いている全てのバッファを対象に定義の検索とジャンプを行います。
-
 このコマンドを実行すると画面上部に候補選択ウィンドウが開き、ジャンプ先を入力できます。
 
 候補選択ウィンドウではあいまいな補完が可能です。
@@ -58,9 +57,7 @@ xrubyjump.vimは以下のコマンドをVimに追加します。
 #### XRubyJumpLocal
 
 カレントウィンドウを対象に定義の検索とジャンプを行います。
-
 このコマンドを実行するとバッファ上部に候補選択ウィンドウが開き、ジャンプ先を入力できます。
-
 他はXRubyJumpと同様です。
 
 #### XRubyJumpCursor
@@ -82,21 +79,20 @@ xrubyjump.vimは以下のコマンドをVimに追加します。
 
 #### XRubyJumpBackward
 
+カーソル移動を補助するコマンドです。
 カーソル位置の後方にある最初の定義にジャンプします。
 
 #### XRubyJumpNextForward
 
 ジャンプ直後は`XRubyJumpNext`として、その後カーソルが移動されると`XRubyJumpForward`として振る舞うコマンドです。
-
 前方への移動にはこのコマンドを使うことを推奨します。
 
 #### XRubyJumpPrevBackward
 
 ジャンプ直後は`XRubyJumpPrev`として、その後カーソルが移動されると`XRubyJumpBackward`として振る舞うコマンドです。
-
 後方への移動にはこのコマンドを使うことを推奨します。
 
-### XRubyJumpVersion
+#### XRubyJumpVersion
 
 XRubyJumpのバージョン情報を表示します。
 
@@ -105,17 +101,18 @@ XRubyJumpのバージョン情報を表示します。
 コマンドと対応させて以下のキーマップを定義しています。
 好きなキーに割り当てて使用して下さい。
 
-|キーマップ|コマンド|
-|:-|:-|
-|<Plug>(xrubyjump)|XRubyJump|
-|<Plug>(xrubyjump_local)|XRubyJumpLocal|
-|<Plug>(xrubyjump_cursor)|XRubyJumpCursor|
-|<Plug>(xrubyjump_next)|XRubyJumpNext|
-|<Plug>(xrubyjump_prev)|XRubyJumpPrev|
-|<Plug>(xrubyjump_forward)|XRubyJumpForward|
-|<Plug>(xrubyjump_backward)|XRubyJumpBackward|
-|<Plug>(xrubyjump_next_forward)|XRubyJumpNextForward|
-|<Plug>(xrubyjump_prev_backward)|XRubyJumpPrevBackward|
+<table>
+<tr><th>キーマップ</th><th>コマンド</th><tr>
+<tr><td>&lt;Plug&gt;(xrubyjump)</td><td>XRubyJump</td></tr>
+<tr><td>&lt;Plug&gt;(xrubyjump_local)</td><td>XRubyJumpLocal</td></tr>
+<tr><td>&lt;Plug&gt;(xrubyjump_cursor)</td><td>XRubyJumpCursor</td></tr>
+<tr><td>&lt;Plug&gt;(xrubyjump_next)</td><td>XRubyJumpNext</td></tr>
+<tr><td>&lt;Plug&gt;(xrubyjump_prev)</td><td>XRubyJumpPrev</td></tr>
+<tr><td>&lt;Plug&gt;(xrubyjump_forward)</td><td>XRubyJumpForward</td></tr>
+<tr><td>&lt;Plug&gt;(xrubyjump_backward)</td><td>XRubyJumpBackward</td></tr>
+<tr><td>&lt;Plug&gt;(xrubyjump_next_forward)</td><td>XRubyJumpNextForward</td></tr>
+<tr><td>&lt;Plug&gt;(xrubyjump_prev_backward)</td><td>XRubyJumpPrevBackward</td></tr>
+</table>
 
 ### グローバル変数
 
@@ -125,7 +122,8 @@ XRubyJumpのバージョン情報を表示します。
 
 #### g:xrubyjump#debug
 
-`1`を設定するとデバッグモードを有効にします。通常は使用しません。
+`1`を設定するとデバッグモードを有効にします。
+通常は使用しません。
 
 ### 設定例
 
