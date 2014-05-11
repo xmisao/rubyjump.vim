@@ -1,9 +1,9 @@
-[English](https://github.com/xmisao/xrubyjump.vim) / Japanese
+[English](https://github.com/xmisao/rubyjump.vim) / Japanese
 
-xrubyjump.vim
+rubyjump
 =============
 
-xrubyjump.vimはRubyスクリプトを編集するためのvimプラグインです。
+rubyjumpはRubyスクリプトを編集するためのvimプラグインです。
 バッファ内のメソッド、クラス、モジュール定義に素早くジャンプすることができます。
 
 ## デモ
@@ -14,87 +14,85 @@ xrubyjump.vimはRubyスクリプトを編集するためのvimプラグインで
 
 ### 手動
 
-xrubyjump.vimを`~/.vim/plugin`ディレクトリにコピーして下さい。
+rubyjump.vimを`~/.vim/plugin`ディレクトリにコピーして下さい。
 
 ### Vundle
 
 以下を`~/.vimrc`に書いて`:BundleInstall`を実行して下さい。
 
 ~~~~
-Bundle 'xmisao/xrubyjump.vim'
+Bundle 'xmisao/rubyjump.vim'
 ~~~~
 
 ## システム要件
 
-xrubyjump.vimはVim 7.4で動作を確認しています。
-xrubyjump.vimを動作させるにはVimのRubyインタフェースが有効になっている必要があります。
+rubyjumpはVim 7.4で動作を確認しています。
+rubyjumpを動作させるにはVimのRubyインタフェースが有効になっている必要があります。
 
 ## 機能
 
 ### コマンド
 
-xrubyjump.vimは以下のコマンドをVimに追加します。
+rubyjumpは以下のコマンドをVimに追加します。
 
-- XRubyJump
-- XRubyJumpLocal
-- XRubyJumpCursor
-- XRubyJumpNext
-- XRubyJumpPrev
-- XRubyJumpForward
-- XRubyJumpBackward
-- XRubyJumpNextForward
-- XRubyJumpPrevBackward
-- XRubyJumpVersion
+- RubyJump
+- RubyJumpLocal
+- RubyJumpCursor
+- RubyJumpNext
+- RubyJumpPrev
+- RubyJumpForward
+- RubyJumpBackward
+- RubyJumpNextForward
+- RubyJumpPrevBackward
+- RubyJumpVersion
 
-#### XRubyJump
+#### RubyJump
 
-開いている全てのバッファを対象に定義の検索とジャンプを行います。
+開いている全てのウィンドウを対象に、定義の検索とジャンプを行います。
 このコマンドを実行すると画面上部に候補選択ウィンドウが開き、ジャンプ先を入力できます。
 
 候補選択ウィンドウではあいまいな補完が可能です。
 例えば`foobar`という名前のメソッドは、`foo`、`bar`、`fb`、`oo`といった入力にマッチして補完されます。
 
-#### XRubyJumpLocal
+#### RubyJumpLocal
 
-カレントウィンドウを対象に定義の検索とジャンプを行います。
-このコマンドを実行するとバッファ上部に候補選択ウィンドウが開き、ジャンプ先を入力できます。
-他はXRubyJumpと同様です。
+カレントウィンドウを対象に、定義の検索とジャンプを行います。
+他はRubyJumpと同様です。
 
-#### XRubyJumpCursor
+#### RubyJumpCursor
 
-カーソル下の単語で`XRubyJump`を実行して定義へジャンプします。
+カーソル下の単語で`RubyJump`を実行して定義へジャンプします。
 
-#### XRubyJumpNext
+#### RubyJumpNext
 
-`XRubyJump`/`XRubyJumpLocal`でジャンプした後に、同名の定義がある場合に、次の候補にジャンプします。
+`RubyJump`/`RubyJumpLocal`でジャンプした後に、同名の定義がある場合に、次の候補にジャンプします。
 
-#### XRubyJumpPrev
+#### RubyJumpPrev
 
-`XRubyJump`/`XRubyJumpLocal`でジャンプした後に、同名の定義がある場合に、前の候補にジャンプします。
+`RubyJump`/`RubyJumpLocal`でジャンプした後に、同名の定義がある場合に、前の候補にジャンプします。
 
-#### XRubyJumpFoward
+#### RubyJumpFoward
 
 カーソル移動を補助するコマンドです。
 カーソル位置の前方にある最初の定義にジャンプします。
 
-#### XRubyJumpBackward
+#### RubyJumpBackward
 
-カーソル移動を補助するコマンドです。
 カーソル位置の後方にある最初の定義にジャンプします。
 
-#### XRubyJumpNextForward
+#### RubyJumpNextForward
 
-ジャンプ直後は`XRubyJumpNext`として、その後カーソルが移動されると`XRubyJumpForward`として振る舞うコマンドです。
+ジャンプ直後は`RubyJumpNext`として、その後カーソルが移動されると`RubyJumpForward`として振る舞います。
 前方への移動にはこのコマンドを使うことを推奨します。
 
-#### XRubyJumpPrevBackward
+#### RubyJumpPrevBackward
 
-ジャンプ直後は`XRubyJumpPrev`として、その後カーソルが移動されると`XRubyJumpBackward`として振る舞うコマンドです。
+ジャンプ直後は`RubyJumpPrev`として、その後カーソルが移動されると`RubyJumpBackward`として振る舞います。
 後方への移動にはこのコマンドを使うことを推奨します。
 
-#### XRubyJumpVersion
+#### RubyJumpVersion
 
-XRubyJumpのバージョン情報を表示します。
+RubyJumpのバージョン情報を表示します。
 
 ### キーマップ
 
@@ -103,24 +101,24 @@ XRubyJumpのバージョン情報を表示します。
 
 <table>
 <tr><th>キーマップ</th><th>コマンド</th><tr>
-<tr><td>&lt;Plug&gt;(xrubyjump)</td><td>XRubyJump</td></tr>
-<tr><td>&lt;Plug&gt;(xrubyjump_local)</td><td>XRubyJumpLocal</td></tr>
-<tr><td>&lt;Plug&gt;(xrubyjump_cursor)</td><td>XRubyJumpCursor</td></tr>
-<tr><td>&lt;Plug&gt;(xrubyjump_next)</td><td>XRubyJumpNext</td></tr>
-<tr><td>&lt;Plug&gt;(xrubyjump_prev)</td><td>XRubyJumpPrev</td></tr>
-<tr><td>&lt;Plug&gt;(xrubyjump_forward)</td><td>XRubyJumpForward</td></tr>
-<tr><td>&lt;Plug&gt;(xrubyjump_backward)</td><td>XRubyJumpBackward</td></tr>
-<tr><td>&lt;Plug&gt;(xrubyjump_next_forward)</td><td>XRubyJumpNextForward</td></tr>
-<tr><td>&lt;Plug&gt;(xrubyjump_prev_backward)</td><td>XRubyJumpPrevBackward</td></tr>
+<tr><td>&lt;Plug&gt;(rubyjump)</td><td>RubyJump</td></tr>
+<tr><td>&lt;Plug&gt;(rubyjump_local)</td><td>RubyJumpLocal</td></tr>
+<tr><td>&lt;Plug&gt;(rubyjump_cursor)</td><td>RubyJumpCursor</td></tr>
+<tr><td>&lt;Plug&gt;(rubyjump_next)</td><td>RubyJumpNext</td></tr>
+<tr><td>&lt;Plug&gt;(rubyjump_prev)</td><td>RubyJumpPrev</td></tr>
+<tr><td>&lt;Plug&gt;(rubyjump_forward)</td><td>RubyJumpForward</td></tr>
+<tr><td>&lt;Plug&gt;(rubyjump_backward)</td><td>RubyJumpBackward</td></tr>
+<tr><td>&lt;Plug&gt;(rubyjump_next_forward)</td><td>RubyJumpNextForward</td></tr>
+<tr><td>&lt;Plug&gt;(rubyjump_prev_backward)</td><td>RubyJumpPrevBackward</td></tr>
 </table>
 
 ### グローバル変数
 
 以下のグローバル変数があります。
 
-- g:xrubyjump#debug
+- g:rubyjump#debug
 
-#### g:xrubyjump#debug
+#### g:rubyjump#debug
 
 `1`を設定するとデバッグモードを有効にします。
 通常は使用しません。
@@ -129,17 +127,17 @@ XRubyJumpのバージョン情報を表示します。
 
 ~~~~
 " デバッグモード無効
-g:xrubyjump#debug = 0
+g:rubyjump#debug = 0
 
 " キーマップ定義
-" ' XRubyjumpを実行
-" " XRubyJumpLocalを実行
-" ; XRubyJumpCursorを実行
+" ' RubyJumpを実行
+" " RubyJumpLocalを実行
+" ; RubyJumpCursorを実行
 " Ctrl + n 前方の定義に飛ぶ
 " Ctrl + p 後方の定義に飛ぶ
-nmap ' <Plug>(xrubyjump)
-autocmd BufNewFile,BufRead *.rb nmap " <Plug>(xrubyjump_local)
-nmap <C-n> <Plug>(xrubyjump_next_forward)
-nmap <C-p> <Plug>(xrubyjump_prev_backward)
-nmap ; <Plug>(xrubyjump_cursor)
+nmap ' <Plug>(rubyjump)
+autocmd BufNewFile,BufRead *.rb nmap " <Plug>(rubyjump_local)
+nmap <C-n> <Plug>(rubyjump_next_forward)
+nmap <C-p> <Plug>(rubyjump_prev_backward)
+nmap ; <Plug>(rubyjump_cursor)
 ~~~~

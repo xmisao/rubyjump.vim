@@ -1,7 +1,7 @@
-xrubyjump.vim
+rubyjump
 =============
 
-Simple vim plugin for ruby editing, jump to method, class, module defenition in a buffer.
+Vim plugin for ruby editing. Quick jump to method, class, module defenitions in a buffer.
 
 ## Demo
 

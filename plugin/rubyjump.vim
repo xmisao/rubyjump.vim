@@ -1,20 +1,20 @@
-if !exists('g:xrubyjump#debug')
-  let g:xrubyjump#debug = 0
+if !exists('g:rubyjump#debug')
+  let g:rubyjump#debug = 0
 endif
 
 "おまじない
-if g:xrubyjump#debug != 1 " デバッグ時は再読み込みを許容
-  if exists("g:loaded_xrubyjump")
+if g:rubyjump#debug != 1 " デバッグ時は再読み込みを許容
+  if exists("g:loaded_rubyjump")
     finish
   endif
 endif
-let g:loaded_xrubyjump = 1
+let g:loaded_rubyjump = 1
 
 let s:save_cpo = &cpo
 set cpo&vim
 
 ruby << RUBY
-module XRubyJump
+module RubyJump
   module Helper
     # カーソルの座標を返す
     def get_pos()
@@ -40,12 +40,12 @@ module XRubyJump
       VIM.command("call cursor(#{pos[:row]}, #{pos[:col]})")
     end
 
-    # g:XRubyJumpDebugが1ならデバッグメッセージを出力
+    # g:RubyJumpDebugが1ならデバッグメッセージを出力
     def debug(obj)
-      flag = VIM.evaluate('g:xrubyjump#debug')
+      flag = VIM.evaluate('g:rubyjump#debug')
       if flag == 1
         message = obj.is_a?(String) ? obj : obj.inspect
-        echom("[XRubyJumpDebug] " + message)
+        echom("[RubyJumpDebug] " + message)
       end
     end
 
@@ -66,13 +66,13 @@ module XRubyJump
 
     def build_index(local)
       # カーソル位置を保存
-      $xrubyjump.cursor = get_pos()
-      debug('cursor: ' + $xrubyjump.cursor.inspect)
+      $rubyjump.cursor = get_pos()
+      debug('cursor: ' + $rubyjump.cursor.inspect)
 
       # 初期化
       @index = Hash.new{|h, k| h[k] = [] }
-      $xrubyjump.local = local
-      debug('local: ' + $xrubyjump.local.to_s)
+      $rubyjump.local = local
+      debug('local: ' + $rubyjump.local.to_s)
       for win in (0..VIM::Window.count - 1)
         # local実行の場合はカレントウィンドウ以外は読み飛ばす
         next if local && win_num(VIM::Window.current) != win
@@ -85,19 +85,19 @@ module XRubyJump
         for i in (1..buf.length)
           if m = buf[i].match(/def (\w+)/)
             name = m[1]
-            $xrubyjump.add_index(name, win, i, buf[i].index('def') + 1)
+            $rubyjump.add_index(name, win, i, buf[i].index('def') + 1)
           end
           if m = buf[i].match(/class (\w+)/)
             name = m[1]
-            $xrubyjump.add_index(name, win, i, buf[i].index('class') + 1)
+            $rubyjump.add_index(name, win, i, buf[i].index('class') + 1)
           end
           if m = buf[i].match(/module (\w+)/)
             name = m[1]
-            $xrubyjump.add_index(name, win, i, buf[i].index('module') + 1)
+            $rubyjump.add_index(name, win, i, buf[i].index('module') + 1)
           end
         end
       end
-      debug("index: " + $xrubyjump.index.inspect)
+      debug("index: " + $rubyjump.index.inspect)
     end
 
     def add_index(name, window, row, col)
@@ -105,9 +105,9 @@ module XRubyJump
     end
 
     def find(name)
-      # XRubyJumpLocal時のみウィンドウ番号を使用、グローバルは0
+      # RubyJumpLocal時のみウィンドウ番号を使用、グローバルは0
       win = 0
-      if $xrubyjump.local
+      if $rubyjump.local
         win = win_num(VIM::Window.current)
       end
 
@@ -130,9 +130,9 @@ module XRubyJump
       # 名前が正しく入力されていない場合は何もしない
       return unless @query && @index[@query] && @index[@query].length > 0
 
-      # XRubyJumpLocal時のみウィンドウ番号を使用、グローバルは0
+      # RubyJumpLocal時のみウィンドウ番号を使用、グローバルは0
       win = 0
-      if $xrubyjump.local
+      if $rubyjump.local
         win = win_num(VIM::Window.current)
       end
 
@@ -166,14 +166,14 @@ module XRubyJump
     end
   end
 end
-include XRubyJump::Helper
-$xrubyjump = XRubyJump::Main.new
+include RubyJump::Helper
+$rubyjump = RubyJump::Main.new
 RUBY
 
 " 候補選択ウィンドウを開く
-func! XRubyJumpWindowOpen(local)
+func! RubyJumpWindowOpen(local)
   " 初期化
-  call XRubyJumpInitialize(a:local)
+  call RubyJumpInitialize(a:local)
 
   " 候補選択ウィンドウ生成
   if a:local == 1
@@ -186,10 +186,10 @@ func! XRubyJumpWindowOpen(local)
   file `='[xRubyJump]'`
 
   " Enterキー入力時のマップ定義
-  inoremap <buffer> <CR> <CR><C-R>=XRubyJumpEnterKeyHandler()<CR>
+  inoremap <buffer> <CR> <CR><C-R>=RubyJumpEnterKeyHandler()<CR>
   " バッファを閉じるautocmdの定義
-  autocmd InsertLeave,BufLeave <buffer> :call XRubyJumpWindowClose()
-  setlocal completefunc=XRubyJumpCompleteFunc
+  autocmd InsertLeave,BufLeave <buffer> :call RubyJumpWindowClose()
+  setlocal completefunc=RubyJumpCompleteFunc
   setlocal completeopt=menuone
   " 文字を入力したら補完を開始
   for c in split("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789",'\zs')
@@ -205,50 +205,50 @@ func! XRubyJumpWindowOpen(local)
 endfunc
 
 " 位置情報と補完候補の初期化
-func! XRubyJumpInitialize(local)
+func! RubyJumpInitialize(local)
 ruby << RUBY
   local = VIM::evaluate('a:local') != 0
-  $xrubyjump.build_index(local)
+  $rubyjump.build_index(local)
 RUBY
 endfunc
 
 " Enterキー押下時のハンドラ
-func! XRubyJumpEnterKeyHandler()
+func! RubyJumpEnterKeyHandler()
   let query = getline(1)
-  call XRubyJumpWindowClose()
+  call RubyJumpWindowClose()
 
   " 選択した定義にカーソルを移動
 ruby << RUBY
   query = VIM::evaluate('query')
-  $xrubyjump.query = query
-  debug('query: ' + $xrubyjump.query)
-  pos = $xrubyjump.find(query)
+  $rubyjump.query = query
+  debug('query: ' + $rubyjump.query)
+  pos = $rubyjump.find(query)
   if pos
     pos = pos.dup
     pos[:col] += 1 # なぜか少しずれるので座標を微調整
     move(pos)
   end
-  $xrubyjump.jumping = true # ジャンプ中フラグを立てる
-  $xrubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
+  $rubyjump.jumping = true # ジャンプ中フラグを立てる
+  $rubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
 RUBY
   " 移動検出のためのautocmd登録
-  autocmd xrubyjump CursorMoved * :call XRubyJumpCursorMoved()
+  autocmd rubyjump CursorMoved * :call RubyJumpCursorMoved()
   return ''
 endfunc
 
-func! XRubyJumpWindowClose()
+func! RubyJumpWindowClose()
   call feedkeys("\<ESC>\<ESC>") " 補完ポップアップを消す
   q! " 候補選択ウィンドウを閉じる
 ruby << RUBY
   # カーソル位置を復元
-  move($xrubyjump.cursor)
+  move($rubyjump.cursor)
 RUBY
 endfunc
 
 " 候補選択ウィンドウのユーザ補完関数、あいまいな補完を行う
-func! XRubyJumpCompleteFunc(findstart, base)
+func! RubyJumpCompleteFunc(findstart, base)
 ruby << RUBY
-  list = $xrubyjump.get_list()
+  list = $rubyjump.get_list()
   query = VIM::evaluate('a:base')
   query_regexp = Regexp.new(([''] + query.split('') + ['']).join('.*')) # あいまいな補完のための正規表現
   result = []
@@ -269,125 +269,125 @@ RUBY
 endfunc
 
 " 同名の次の候補に飛ぶ
-func! XRubyJumpNext()
+func! RubyJumpNext()
 ruby << RUBY
-  $xrubyjump.next(1)
-  $xrubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
+  $rubyjump.next(1)
+  $rubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
 RUBY
 endfunc
 
 " 同名の前の候補に飛ぶ
-func! XRubyJumpPrev()
+func! RubyJumpPrev()
 ruby << RUBY
-  $xrubyjump.next(-1)
-  $xrubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
+  $rubyjump.next(-1)
+  $rubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
 RUBY
 endfunc
 
-" カーソル下の単語でXRubyJumpを実行
-func! XRubyJumpCursor()
-  call XRubyJumpInitialize(0)
+" カーソル下の単語でRubyJumpを実行
+func! RubyJumpCursor()
+  call RubyJumpInitialize(0)
 ruby << RUBY
   query = VIM::evaluate('expand("<cword>")')
-  $xrubyjump.query = query
-  debug('query: ' + $xrubyjump.query)
-  pos = $xrubyjump.find(query)
+  $rubyjump.query = query
+  debug('query: ' + $rubyjump.query)
+  pos = $rubyjump.find(query)
   move(pos) if pos
-  $xrubyjump.jumping = true # ジャンプ中フラグを立てる
-  $xrubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
+  $rubyjump.jumping = true # ジャンプ中フラグを立てる
+  $rubyjump.jumptime = Time.now.to_f # ジャンプ時間を更新
 RUBY
   " 移動検出のためのautocmd登録
-  autocmd xrubyjump CursorMoved * :call XRubyJumpCursorMoved()
+  autocmd rubyjump CursorMoved * :call RubyJumpCursorMoved()
 endfunc
 
 " バッファ内の次の候補に飛ぶ
-func! XRubyJumpForward()
-  call XRubyJumpInitialize(1)
+func! RubyJumpForward()
+  call RubyJumpInitialize(1)
 ruby << RUBY
-  $xrubyjump.forward()
+  $rubyjump.forward()
 RUBY
 endfunc
 
 " バッファ内の前の候補に飛ぶ
-func! XRubyJumpBackward()
-  call XRubyJumpInitialize(1)
+func! RubyJumpBackward()
+  call RubyJumpInitialize(1)
 ruby << RUBY
-  $xrubyjump.backward()
+  $rubyjump.backward()
 RUBY
 endfunc
 
-func! XRubyJumpCursorMoved()
+func! RubyJumpCursorMoved()
 ruby << RUBY
   debug('cursor moved.')
-  if $xrubyjump.jumptime
+  if $rubyjump.jumptime
     # 最終ジャンプ時刻から0.1秒未満のイベントは無視する
     # これはcursor()によるカーソル移動が関数から抜けた後に処理されるので
     # ジャンプによる移動とジャンプ後のユーザによる移動を区別できないため
-    if Time.now.to_f - $xrubyjump.jumptime > 0.1
-      $xrubyjump.jumping = false # ジャンプ中フラグをクリア
+    if Time.now.to_f - $rubyjump.jumptime > 0.1
+      $rubyjump.jumping = false # ジャンプ中フラグをクリア
       debug('jumping flag clear.')
-      VIM::command("autocmd! xrubyjump CursorMoved *") # カーソル移動のautocmdを削除
+      VIM::command("autocmd! rubyjump CursorMoved *") # カーソル移動のautocmdを削除
     end
 end
 RUBY
 endfunc
 
-" ジャンプ中であればXRubyJumpNextを
-" ジャンプ中でなければXRubyJumpForwardを実行する
-func! XRubyJumpNextForward()
+" ジャンプ中であればRubyJumpNextを
+" ジャンプ中でなければRubyJumpForwardを実行する
+func! RubyJumpNextForward()
 ruby << RUBY
-  debug('jumping: ' + $xrubyjump.inspect)
-  if $xrubyjump.jumping
-    VIM::command("XRubyJumpNext")
+  debug('jumping: ' + $rubyjump.inspect)
+  if $rubyjump.jumping
+    VIM::command("RubyJumpNext")
   else
-    VIM::command("XRubyJumpForward")
+    VIM::command("RubyJumpForward")
   end
 RUBY
 endfunc
 
-" ジャンプ中であればXRubyJumpPrevを
-" ジャンプ中でなければXRubyJumpBackwardを実行する
-func! XRubyJumpPrevBackward()
+" ジャンプ中であればRubyJumpPrevを
+" ジャンプ中でなければRubyJumpBackwardを実行する
+func! RubyJumpPrevBackward()
 ruby << RUBY
-  debug('jumping: ' + $xrubyjump.inspect)
-  if $xrubyjump.jumping
-    VIM::command("XRubyJumpPrev")
+  debug('jumping: ' + $rubyjump.inspect)
+  if $rubyjump.jumping
+    VIM::command("RubyJumpPrev")
   else
-    VIM::command("XRubyJumpBackward")
+    VIM::command("RubyJumpBackward")
   end
 RUBY
 endfunc
 
 " バージョン情報
-func! XRubyJumpVersion()
-  echo "XRubyJump 0.9.0"
+func! RubyJumpVersion()
+  echo "RubyJump 0.9.0"
 endfunc
 
 " 自動コマンドグループを定義
-augroup xrubyjump
+augroup rubyjump
 
-" XRubyJumpコマンドを定義(XRubyJumpLocalは*.rbの編集中のみ)
-autocmd BufNewFile,BufRead *.rb command! -buffer XRubyJumpLocal :call XRubyJumpWindowOpen(1)
-command! XRubyJump :call XRubyJumpWindowOpen(0)
-command! XRubyJumpCursor :call XRubyJumpCursor()
-command! XRubyJumpNext :call XRubyJumpNext()
-command! XRubyJumpPrev :call XRubyJumpPrev()
-command! XRubyJumpForward :call XRubyJumpForward()
-command! XRubyJumpBackward :call XRubyJumpBackward()
-command! XRubyJumpNextForward :call XRubyJumpNextForward()
-command! XRubyJumpPrevBackward :call XRubyJumpPrevBackward()
-command! XRubyJumpVersion :call XRubyJumpVersion()
+" RubyJumpコマンドを定義(RubyJumpLocalは*.rbの編集中のみ)
+autocmd BufNewFile,BufRead *.rb command! -buffer RubyJumpLocal :call RubyJumpWindowOpen(1)
+command! RubyJump :call RubyJumpWindowOpen(0)
+command! RubyJumpCursor :call RubyJumpCursor()
+command! RubyJumpNext :call RubyJumpNext()
+command! RubyJumpPrev :call RubyJumpPrev()
+command! RubyJumpForward :call RubyJumpForward()
+command! RubyJumpBackward :call RubyJumpBackward()
+command! RubyJumpNextForward :call RubyJumpNextForward()
+command! RubyJumpPrevBackward :call RubyJumpPrevBackward()
+command! RubyJumpVersion :call RubyJumpVersion()
 
 " キーマップの定義
-map <Plug>(xrubyjump_local) :<C-u>call XRubyJumpWindowOpen(1)<CR>
-map <Plug>(xrubyjump) :<C-u>call XRubyJumpWindowOpen(0)<CR>
-map <Plug>(xrubyjump_cursor) :<C-u>call XRubyJumpCursor()<CR>
-map <Plug>(xrubyjump_next) :<C-u>call XRubyJumpNext()<CR>
-map <Plug>(xrubyjump_prev) :<C-u>call XRubyJumpPrev()<CR>
-map <Plug>(xrubyjump_forward) :<C-u>call XRubyJumpForward()<CR>
-map <Plug>(xrubyjump_backward) :<C-u>call XRubyJumpBackward()<CR>
-map <Plug>(xrubyjump_next_forward) :<C-u>call XRubyJumpNextForward()<CR>
-map <Plug>(xrubyjump_prev_backward) :<C-u>call XRubyJumpPrevBackward()<CR>
+map <Plug>(rubyjump_local) :<C-u>call RubyJumpWindowOpen(1)<CR>
+map <Plug>(rubyjump) :<C-u>call RubyJumpWindowOpen(0)<CR>
+map <Plug>(rubyjump_cursor) :<C-u>call RubyJumpCursor()<CR>
+map <Plug>(rubyjump_next) :<C-u>call RubyJumpNext()<CR>
+map <Plug>(rubyjump_prev) :<C-u>call RubyJumpPrev()<CR>
+map <Plug>(rubyjump_forward) :<C-u>call RubyJumpForward()<CR>
+map <Plug>(rubyjump_backward) :<C-u>call RubyJumpBackward()<CR>
+map <Plug>(rubyjump_next_forward) :<C-u>call RubyJumpNextForward()<CR>
+map <Plug>(rubyjump_prev_backward) :<C-u>call RubyJumpPrevBackward()<CR>
 
 " おまじない
 let &cpo = s:save_cpo
