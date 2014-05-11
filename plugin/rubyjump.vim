@@ -1,3 +1,5 @@
+scriptencoding utf-8
+
 if !exists('g:rubyjump#debug')
   let g:rubyjump#debug = 0
 endif
@@ -40,7 +42,7 @@ module RubyJump
       VIM.command("call cursor(#{pos[:row]}, #{pos[:col]})")
     end
 
-    # g:RubyJumpDebugが1ならデバッグメッセージを出力
+    # g:rubyjump#debugが1ならデバッグメッセージを出力
     def debug(obj)
       flag = VIM.evaluate('g:rubyjump#debug')
       if flag == 1
@@ -49,7 +51,7 @@ module RubyJump
       end
     end
 
-    # 文字列を表示し
+    # 文字列を表示してメッセージ履歴に残す
     def echom(str)
       VIM.command("echom '#{str}'")
     end
@@ -360,7 +362,7 @@ endfunc
 
 " バージョン情報
 func! RubyJumpVersion()
-  echo "RubyJump 0.9.0"
+  echo "RubyJump 0.9.1"
 endfunc
 
 " 自動コマンドグループを定義
