@@ -1,14 +1,14 @@
 [English](https://github.com/xmisao/rubyjump.vim) / Japanese
 
-rubyjump
+RubyJump
 =============
 
-rubyjumpはRubyスクリプトを編集するためのvimプラグインです。
+RubyJumpはRubyスクリプトを編集するためのvimプラグインです。
 バッファ内のメソッド、クラス、モジュール定義に素早くジャンプすることができます。
 
 ## デモ
 
-<img src="http://www.xmisao.com/assets/2014_05_02_xrubyjump_demo.gif">
+<img src="http://www.xmisao.com/assets/2014_05_11_rubyjump_demo.gif">
 
 ## インストール
 
@@ -26,14 +26,14 @@ Bundle 'xmisao/rubyjump.vim'
 
 ## システム要件
 
-rubyjumpはVim 7.4で動作を確認しています。
-rubyjumpを動作させるにはVimのRubyインタフェースが有効になっている必要があります。
+RubyJumpはVim 7.4で動作を確認しています。
+RubyJumpを動作させるにはVimのRubyインタフェースが有効になっている必要があります。
 
 ## 機能
 
 ### コマンド
 
-rubyjumpは以下のコマンドをVimに追加します。
+RubyJumpは以下のコマンドをVimに追加します。
 
 - RubyJump
 - RubyJumpLocal
@@ -48,7 +48,7 @@ rubyjumpは以下のコマンドをVimに追加します。
 
 #### RubyJump
 
-開いている全てのウィンドウを対象に、定義へのジャンプを行います。
+全てのウィンドウの定義のいずれかへジャンプします。
 このコマンドを実行すると画面上部に候補選択ウィンドウが開きます。
 Enterキーで候補を確定すると、その名前の定義にジャンプできます。
 
@@ -57,7 +57,7 @@ Enterキーで候補を確定すると、その名前の定義にジャンプで
 
 #### RubyJumpLocal
 
-カレントウィンドウを対象に、定義へのジャンプを行います。
+カレントウィンドウの定義のいずれかへジャンプします。
 他はRubyJumpと同様です。
 
 #### RubyJumpCursor
@@ -131,14 +131,12 @@ RubyJumpのバージョン情報を表示します。
 g:rubyjump#debug = 0
 
 " キーマップ定義
-" ' RubyJumpを実行
-" " RubyJumpLocalを実行
+" <Space> RubyJumpを実行
 " ; RubyJumpCursorを実行
 " Ctrl + n 前方の定義に飛ぶ
 " Ctrl + p 後方の定義に飛ぶ
-nmap ' <Plug>(rubyjump)
-autocmd BufNewFile,BufRead *.rb nmap " <Plug>(rubyjump_local)
-nmap <C-n> <Plug>(rubyjump_next_forward)
-nmap <C-p> <Plug>(rubyjump_prev_backward)
-nmap ; <Plug>(rubyjump_cursor)
+nmap <silent> <Space> <Plug>(rubyjump)
+nmap <silent> <C-n> <Plug>(rubyjump_next_forward)
+nmap <silent> <C-p> <Plug>(rubyjump_prev_backward)
+nmap <silent> ; <Plug>(rubyjump_cursor)
 ~~~~
