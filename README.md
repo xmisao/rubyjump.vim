@@ -1,3 +1,5 @@
+English / [Japanese](https://github.com/xmisao/rubyjump.vim/blob/master/README.ja.md)
+
 rubyjump
 =============
 
