@@ -185,7 +185,7 @@ func! RubyJumpWindowOpen(local)
   endif
   hide enew
   setlocal noswapfile
-  file `='[xRubyJump]'`
+  file `='[RubyJump]'`
 
   " Enterキー入力時のマップ定義
   inoremap <buffer> <CR> <CR><C-R>=RubyJumpEnterKeyHandler()<CR>
