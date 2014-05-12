@@ -66,11 +66,11 @@ Enterキーで候補を確定すると、その名前の定義にジャンプで
 
 #### RubyJumpNext
 
-`RubyJump`/`RubyJumpLocal`でジャンプした後に、同名の定義がある場合に、次の候補にジャンプします。
+`RubyJump`/`RubyJumpLocal`でジャンプした後に、同名の定義がある場合に、次の定義にジャンプします。
 
 #### RubyJumpPrev
 
-`RubyJump`/`RubyJumpLocal`でジャンプした後に、同名の定義がある場合に、前の候補にジャンプします。
+`RubyJump`/`RubyJumpLocal`でジャンプした後に、同名の定義がある場合に、前の定義にジャンプします。
 
 #### RubyJumpFoward
 
@@ -127,6 +127,8 @@ RubyJumpのバージョン情報を表示します。
 ### 設定例
 
 ~~~~
+" for RubyJump
+
 " デバッグモード無効
 g:rubyjump#debug = 0
 
