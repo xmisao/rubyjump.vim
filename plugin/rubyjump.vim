@@ -266,7 +266,7 @@ RUBY
     if len(condidate) > 0
       return 0
     else
-      return -3
+      return -2
     end
   else
     return {'refresh': 'always', 'words': condidate}
