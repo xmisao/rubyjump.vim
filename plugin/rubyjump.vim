@@ -85,21 +85,24 @@ module RubyJump
         index = [] # 位置情報
         list = [] # 補完候補
         for i in (1..buf.length)
-          if m = buf[i].match(/def (\w+)/)
-            name = m[1]
+          if name = get_name("def", buf[i])
             $rubyjump.add_index(name, win, i, buf[i].index('def') + 1)
           end
-          if m = buf[i].match(/class (\w+)/)
-            name = m[1]
+          if name = get_name("class", buf[i])
             $rubyjump.add_index(name, win, i, buf[i].index('class') + 1)
           end
-          if m = buf[i].match(/module (\w+)/)
-            name = m[1]
+          if name = get_name("module", buf[i])
             $rubyjump.add_index(name, win, i, buf[i].index('module') + 1)
           end
         end
       end
       debug("index: " + $rubyjump.index.inspect)
+    end
+
+    def get_name(type, line)
+      full_name = line.slice(/#{type}\s+[\w\.:]+/)
+      return nil unless full_name
+      full_name.slice(/\w+$/)
     end
 
     def add_index(name, window, row, col)
@@ -362,7 +365,7 @@ endfunc
 
 " バージョン情報
 func! RubyJumpVersion()
-  echo "RubyJump 0.9.1"
+  echo "RubyJump 0.9.2 beta"
 endfunc
 
 " 自動コマンドグループを定義
