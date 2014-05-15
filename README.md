@@ -3,7 +3,7 @@ English / [Japanese](https://github.com/xmisao/rubyjump.vim/blob/master/README.j
 RubyJump
 =============
 
-Vim plugin for ruby editing. Quick jump to method, class, module defenitions in a buffer.
+Vim plugin for ruby editing. Quick jump to method, class, module defenitions in buffers.
 
 ## Demo
 
@@ -32,7 +32,7 @@ Ruby interface(if_ruby) is required.
 
 ### Commands
 
-RubyJump add there comamnds to Vim.
+RubyJump add these comamnds to Vim.
 
 - RubyJump
 - RubyJumpLocal
@@ -97,7 +97,7 @@ Show RubyJump's version information.
 
 ### Keymaps
 
-RubyJump provides there keymaps to Vim.
+RubyJump provides these keymaps to Vim.
 Keymaps are obverse commands.
 
 <table>
