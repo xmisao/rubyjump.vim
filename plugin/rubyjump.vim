@@ -5,7 +5,14 @@ if !exists('g:rubyjump#debug')
 endif
 
 if !exists('g:rubyjump#enable_ripper')
-  let g:rubyjump#enable_ripper = 0
+ruby <<RUBY
+  # Ruby 1.9以降ならデフォルトでripperを有効にする
+  if RUBY_VERSION >= "1.9"
+    VIM::command("let g:rubyjump#enable_ripper = 1")
+  else
+    VIM::command("let g:rubyjump#enable_ripper = 0")
+  end
+RUBY
 endif
 
 "おまじない
@@ -130,6 +137,7 @@ module RubyJump
       debug("index: " + $rubyjump.index.inspect)
     end
 
+    # ripperによるパース
     def parse_by_ripper(win, buf)
       debug("parse_by_ripper")
       #debug(buf.to_s)
@@ -147,6 +155,7 @@ module RubyJump
       elm = array[index]
       name = nil
       if elm[1] == :on_kw and elm[2].is("def", "class", "module")
+        # 名前の終わりまでを読み込む
         array[(index + 1)..-1].each{|e|
           if e[1] == :on_nl or # 行末
              e[1] == :on_semicolon or # セミコロン
@@ -166,6 +175,7 @@ module RubyJump
       end
     end
 
+    # 正規表現によるパース
     def parse_by_regexp(win, buf)
       debug("parse_by_regexp")
       for i in (1..buf.length)
