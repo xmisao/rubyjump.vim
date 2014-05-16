@@ -4,6 +4,10 @@ if !exists('g:rubyjump#debug')
   let g:rubyjump#debug = 0
 endif
 
+if !exists('g:rubyjump#enable_ripper')
+  let g:rubyjump#enable_ripper = 0
+endif
+
 "おまじない
 if g:rubyjump#debug != 1 " デバッグ時は再読み込みを許容
   if exists("g:loaded_rubyjump")
@@ -16,6 +20,27 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 ruby << RUBY
+require 'ripper' if VIM::evaluate('g:rubyjump#enable_ripper') == 1
+
+class String
+  def is(*args)
+    args.each{|str|
+      return true if self =~ Regexp.new(str)
+    }
+    return false
+  end
+end
+
+class VIM::Buffer
+  def to_s
+    str = ""
+    for i in (1..self.length)
+      str << self[i] + "\n"
+    end
+    str
+  end
+end
+
 module RubyJump
   module Helper
     # カーソルの座標を返す
@@ -71,10 +96,12 @@ module RubyJump
       $rubyjump.cursor = get_pos()
       debug('cursor: ' + $rubyjump.cursor.inspect)
 
-      # 初期化
-      @index = Hash.new{|h, k| h[k] = [] }
+      # モードを保存
       $rubyjump.local = local
       debug('local: ' + $rubyjump.local.to_s)
+
+      @index = Hash.new{|h, k| h[k] = [] }
+
       for win in (0..VIM::Window.count - 1)
         # local実行の場合はカレントウィンドウ以外は読み飛ばす
         next if local && win_num(VIM::Window.current) != win
@@ -82,21 +109,64 @@ module RubyJump
         buf = VIM::Window[win].buffer
         filetype = VIM.evaluate("getbufvar(#{buf.number}, '&filetype')")
         next if filetype != 'ruby'
-        index = [] # 位置情報
-        list = [] # 補完候補
-        for i in (1..buf.length)
-          if name = get_name("def", buf[i])
-            $rubyjump.add_index(name, win, i, buf[i].index('def') + 1)
-          end
-          if name = get_name("class", buf[i])
-            $rubyjump.add_index(name, win, i, buf[i].index('class') + 1)
-          end
-          if name = get_name("module", buf[i])
-            $rubyjump.add_index(name, win, i, buf[i].index('module') + 1)
-          end
+
+        if VIM::evaluate("g:rubyjump#enable_ripper") == 1
+          parse_by_ripper(win, buf)
+        else
+          parse_by_regexp(win, buf)
         end
       end
       debug("index: " + $rubyjump.index.inspect)
+    end
+
+    def parse_by_ripper(win, buf)
+      debug("parse_by_ripper")
+      #debug(buf.to_s)
+      array = Ripper.lex(buf.to_s)
+      array.length.times{|i|
+        if e = parse_by_ripper0(array, win, i)
+          debug(e)
+          $rubyjump.add_index(e[1], win, e[0][0], e[0][1] + 1)
+        end
+      }
+    end
+
+    def parse_by_ripper0(array, win, index)
+      elm = array[index]
+      name = nil
+      if elm[1] == :on_kw and elm[2].is("def", "class", "module")
+        array[(index + 1)..-1].each{|e|
+          if e[1] == :on_nl or # 行末
+             e[1] == :on_semicolon or # セミコロン
+             (e[1] == :on_op and e[2] == "<") or # クラス継承
+             (e[1] == :on_op and e[2] == "<<") or # 特異クラス
+             (e[1] == :on_lparen) # 引数の(
+            break
+          end
+          name = e[2] if e[1] == :on_ident or e[1] == :on_const
+        }
+      end
+
+      if name
+        [elm[0], name]
+      else
+        nil
+      end
+    end
+
+    def parse_by_regexp(win, buf)
+      debug("parse_by_regexp")
+      for i in (1..buf.length)
+        if name = get_name("def", buf[i])
+          $rubyjump.add_index(name, win, i, buf[i].index('def') + 1)
+        end
+        if name = get_name("class", buf[i])
+          $rubyjump.add_index(name, win, i, buf[i].index('class') + 1)
+        end
+        if name = get_name("module", buf[i])
+          $rubyjump.add_index(name, win, i, buf[i].index('module') + 1)
+        end
+      end
     end
 
     def get_name(type, line)
