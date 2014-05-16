@@ -118,11 +118,27 @@ RubyJumpのバージョン情報を表示します。
 以下のグローバル変数があります。
 
 - g:rubyjump#debug
+- g:rubyjump#enable_ripper
+- g:rubyjump#filetypes
 
 #### g:rubyjump#debug
 
 `1`を設定するとデバッグモードを有効にします。
 通常は使用しません。
+デフォルト値は0です。
+
+#### g:rubyjump#enable_ripper
+
+`1`を設定するとRubyパーサのripperを使用します。
+このオプションが有効な時、RubyJumpはまずripperによるパースを試み、パースエラーなら正規表現でパースします。
+
+このオプションはRuby 1.9以上を要求します。
+デフォルト値はRubyが1.9以上の時は`1`、未満の場合は`0`です。
+
+#### g:rubyjump#filetypes
+
+RubyJumpの対象とするファイルタイプを配列で指定します。
+デフォルト値は`['ruby']`です。
 
 ### 設定例
 
