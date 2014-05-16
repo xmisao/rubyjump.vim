@@ -41,6 +41,12 @@ class VIM::Buffer
   end
 end
 
+class Parser < Ripper
+  def on_parse_error(*args)
+    raise 'ParseError'
+  end
+end
+
 module RubyJump
   module Helper
     # カーソルの座標を返す
@@ -111,7 +117,12 @@ module RubyJump
         next if filetype != 'ruby'
 
         if VIM::evaluate("g:rubyjump#enable_ripper") == 1
-          parse_by_ripper(win, buf)
+          # まずripperでパースを試みてパースエラーなら正規表現でパースする
+          begin
+            parse_by_ripper(win, buf)
+          rescue
+            parse_by_regexp(win, buf)
+          end
         else
           parse_by_regexp(win, buf)
         end
@@ -122,7 +133,8 @@ module RubyJump
     def parse_by_ripper(win, buf)
       debug("parse_by_ripper")
       #debug(buf.to_s)
-      array = Ripper.lex(buf.to_s)
+      Parser.parse(buf.to_s) # パースエラーを検出
+      array = Parser.lex(buf.to_s)
       array.length.times{|i|
         if e = parse_by_ripper0(array, win, i)
           debug(e)
